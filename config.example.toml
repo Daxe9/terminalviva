@@ -1,0 +1,15 @@
+[credentials]
+username = ""
+password = ""
+
+[[headers]]
+key = "Content-Type"
+value = "application/json"
+
+[[headers]]
+key = "Z-Dev-Apikey"
+value = "Tg1NWEwNGIgIC0K"
+
+[[headers]]
+key = "User-Agent"
+value = "CVVS/std/4.1.7 Android/10"
