@@ -4,7 +4,6 @@ mod settings;
 mod response_types;
 mod display;
 use config::Config;
-use input::InputSource;
 use lazy_static::lazy_static;
 use reqwest::header::HeaderMap;
 use std::sync::Mutex;
@@ -17,8 +16,5 @@ lazy_static! {
 
 #[tokio::main]
 async fn main() {
-    InputSource::build(std::env::args())
-        .expect("Error at parsing input arguments")
-        .process_command()
-        .await;
+    input::process_input().await;
 }

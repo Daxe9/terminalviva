@@ -133,7 +133,6 @@ pub async fn login() -> TokenCredential {
         tokenAP: String::new(),
         studentId: String::new()
     };
-    // TODO: WATCH THE TERMINAL OUTPUT AND BUILD A STRUCT OVER IT TO HANDLE THE 5 TIMES UNMATCHED CREDENTIAL
 
     match raw_result.json::<LoginResponse>().await {
         Ok(res) => {
