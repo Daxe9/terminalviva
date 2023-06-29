@@ -1,8 +1,10 @@
+use crate::input::GradeSettings;
 use crate::response_types::*;
-use tabled::{Tabled, settings::{object::Rows, Modify, Style}, Table};
 use tabled::settings::Alignment;
-use crate::input::Settings;
-
+use tabled::{
+    settings::{object::Rows, Modify, Style},
+    Table, Tabled,
+};
 
 #[allow(non_snake_case)]
 #[derive(Tabled)]
@@ -25,10 +27,11 @@ impl SimpleGrade {
             "LINGUA E LETTERATURA ITALIANA" => "ITALIANO".to_string(),
             "STORIA,CITTADINANZA E COSTITUZIONE" => "STORIA".to_string(),
             "SCIENZE MOTORIE E SPORTIVE" => "MOTORIA".to_string(),
-            "TECNOLOGIE E PROGETTAZIONE DI SISTEMI INFORMATICI E DI TELECOMUNICAZIONI " => "TPSIT".to_string(),
-            _ => subject_desc
+            "TECNOLOGIE E PROGETTAZIONE DI SISTEMI INFORMATICI E DI TELECOMUNICAZIONI " => {
+                "TPSIT".to_string()
+            }
+            _ => subject_desc,
         };
-
 
         SimpleGrade {
             subject,
@@ -44,8 +47,16 @@ fn sort_date_grade(grades: Vec<SimpleGrade>, from_oldest_to_youngest: bool) -> V
     let mut grades = grades;
     grades.sort_by(|a, b| {
         // split the date value and parse three values to i32 and collect them into a vector
-        let a_date: Vec<i32> = a.date.split('-').map(|x| x.parse::<i32>().expect("[ERROR]: Cannot parse date object")).collect();
-        let b_date: Vec<i32> = b.date.split('-').map(|x| x.parse::<i32>().expect("[ERROR]: Cannot parse date object")).collect();
+        let a_date: Vec<i32> = a
+            .date
+            .split('-')
+            .map(|x| x.parse::<i32>().expect("[ERROR]: Cannot parse date object"))
+            .collect();
+        let b_date: Vec<i32> = b
+            .date
+            .split('-')
+            .map(|x| x.parse::<i32>().expect("[ERROR]: Cannot parse date object"))
+            .collect();
 
         // sum the values of the date vector
         let a_date = a_date[0] * 365 + a_date[1] * 30 + a_date[2];
@@ -61,9 +72,23 @@ fn sort_date_grade(grades: Vec<SimpleGrade>, from_oldest_to_youngest: bool) -> V
     grades
 }
 
-pub fn display_grades(grades: Grades, settings: Settings) -> String {
-    let simplified_grades: Vec<SimpleGrade> = grades.grades.into_iter().map(SimpleGrade::from_grade).collect();
-    let simplified_grades = sort_date_grade(simplified_grades, settings.desc_date);
+pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
+    let simplified_grades: Vec<SimpleGrade> = grades
+        .grades
+        .into_iter()
+        .map(SimpleGrade::from_grade)
+        .collect();
+
+    // filter it by name if the name is specified
+    let simplified_grades: Vec<SimpleGrade> = match grade_settings.name {
+        Some(name) => simplified_grades
+            .into_iter()
+            .filter(|x| x.subject.to_lowercase().trim() == name.to_lowercase().trim())
+            .collect(),
+        None => simplified_grades,
+    };
+
+    let simplified_grades = sort_date_grade(simplified_grades, grade_settings.settings.desc_date);
     let mut table = Table::new(simplified_grades);
     table
         .with(Style::rounded())
