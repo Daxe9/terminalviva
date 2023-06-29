@@ -1,8 +1,8 @@
 // Module: api
+use crate::response_types::*;
+use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
 use std::io::Write;
 use std::path::Path;
-use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
-use crate::response_types::*;
 
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub struct Credentials {
 pub struct TokenCredential {
     pub token: String,
     pub tokenAP: String,
-    pub studentId: String
+    pub studentId: String,
 }
 
 #[derive(Serialize)]
@@ -37,7 +37,6 @@ impl LoginData {
         }
     }
 }
-
 
 /*
     Check whether the file exists or not
@@ -66,7 +65,7 @@ async fn get_request(url: &str) -> String {
         None => TokenCredential {
             token: String::new(),
             tokenAP: String::new(),
-            studentId: String::new()
+            studentId: String::new(),
         },
     };
 
@@ -90,7 +89,10 @@ async fn get_request(url: &str) -> String {
         Err(e) => panic!("error sending get request at {}: {}", url, e),
     };
 
-    raw_result.text().await.expect("Error at converting response to text")
+    raw_result
+        .text()
+        .await
+        .expect("Error at converting response to text")
 }
 
 fn process_url(url: String, student_id: &str) -> String {
@@ -131,7 +133,7 @@ pub async fn login() -> TokenCredential {
     let mut token_credential = TokenCredential {
         token: String::new(),
         tokenAP: String::new(),
-        studentId: String::new()
+        studentId: String::new(),
     };
 
     match raw_result.json::<LoginResponse>().await {
@@ -145,10 +147,10 @@ pub async fn login() -> TokenCredential {
                     token_credential.token = v.token;
                     token_credential.tokenAP = v.tokenAP;
                     // remove the first and the last character from the ident field to obtain the studentId
-                    token_credential.studentId = v.ident[1..v.ident.len()-1].to_string();
+                    token_credential.studentId = v.ident[1..v.ident.len() - 1].to_string();
 
                     update_token(&token_credential);
-                },
+                }
                 LoginResponse::LoginError(info) => {
                     eprintln!("Login failed: {}", info.message);
                     // check if a file exists or not
@@ -160,7 +162,6 @@ pub async fn login() -> TokenCredential {
                         };
                     }
                     std::process::exit(1);
-
                 }
             }
         }
@@ -194,13 +195,13 @@ pub async fn grades_request() -> Grades {
 
                         // replace the token
                         TOKEN.lock().unwrap().replace(token_credential);
-                    },
+                    }
                     ResponseResult::Grades(payload) => {
                         result = payload;
                         break;
-                    },
+                    }
                 }
-            },
+            }
             Err(e) => {
                 panic!("[ERROR]: Parsing grades response: {}", e)
             }

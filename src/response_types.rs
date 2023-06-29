@@ -10,17 +10,17 @@ use serde_json::Value;
 #[serde(untagged)]
 pub enum ResponseResult {
     ExpiredToken(ExpiredToken),
-    Grades(Grades)
+    Grades(Grades),
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpiredToken {
     pub statusCode: u16,
     pub error: String,
-    pub message: String
+    pub message: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Grades {
-    pub grades: Vec<Grade>
+    pub grades: Vec<Grade>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -59,9 +59,7 @@ pub struct Grade {
 
 impl Grades {
     pub fn new() -> Self {
-        Grades {
-            grades: Vec::new()
-        }
+        Grades { grades: Vec::new() }
     }
 }
 
@@ -69,7 +67,7 @@ impl Grades {
 #[serde(untagged)]
 pub enum LoginResponse {
     LoginPayload(LoginPayload),
-    LoginError(LoginError)
+    LoginError(LoginError),
 }
 
 #[derive(Deserialize, Debug)]
@@ -91,5 +89,5 @@ pub struct LoginError {
     pub statusCode: u16,
     pub error: String,
     pub info: String,
-    pub message: String
+    pub message: String,
 }

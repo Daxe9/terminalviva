@@ -1,7 +1,7 @@
+use crate::api::TokenCredential;
 use config::{Config, File};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
-use crate::api::TokenCredential;
 use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -56,7 +56,7 @@ pub fn get_token() -> Mutex<Option<TokenCredential>> {
 
     let token_credentials: TokenCredential = match serde_json::from_reader(file) {
         Ok(v) => v,
-        Err(_) => return Mutex::new(None)
+        Err(_) => return Mutex::new(None),
     };
 
     Mutex::new(Some(token_credentials))

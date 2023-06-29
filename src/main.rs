@@ -1,8 +1,8 @@
 mod api;
-mod input;
-mod settings;
-mod response_types;
 mod display;
+mod input;
+mod response_types;
+mod settings;
 use config::Config;
 use lazy_static::lazy_static;
 use reqwest::header::HeaderMap;
