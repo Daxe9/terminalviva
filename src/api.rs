@@ -174,13 +174,46 @@ pub async fn login() -> TokenCredential {
     token_credential
 }
 
-pub async fn absences_request() -> String {
+pub async fn absences_request() -> Absences {
     let url = format!("{}/students/<studentID>/absences/details", BASE_URL);
-    get_request(&url).await
+    // disable the warning for unused_assignments
+    #[allow(unused_assignments)]
+    let mut result = Absences::new();
+    loop {
+        let raw_result = get_request(&url).await;
+
+        match serde_json::from_str(&raw_result) {
+            Ok(response) => {
+                match response {
+                    ResponseResult::ExpiredToken(_) => {
+                        println!("Re-login...");
+                        // Re-login
+                        let token_credential = login().await;
+
+                        // replace the token
+                        TOKEN.lock().unwrap().replace(token_credential);
+                    }
+                    ResponseResult::Absences(payload) => {
+                        result = payload;
+                        break;
+                    }
+                    _ => {
+                        panic!("[ERROR]: Wrong return type upon api call {}", raw_result)
+                    }
+                }
+            }
+            Err(e) => {
+                panic!("[ERROR]: Parsing absence response: {}", e)
+            }
+        };
+    }
+    result
 }
 
 pub async fn grades_request() -> Grades {
     let url = format!("{}/students/<studentID>/grades", BASE_URL);
+    // disable the warning for unused_assignments
+    #[allow(unused_assignments)]
     let mut result = Grades::new();
     loop {
         let raw_result = get_request(&url).await;
@@ -199,6 +232,10 @@ pub async fn grades_request() -> Grades {
                     ResponseResult::Grades(payload) => {
                         result = payload;
                         break;
+                    }
+
+                    _ => {
+                        panic!("[ERROR]: Wrong return type upon api call {}", raw_result)
                     }
                 }
             }

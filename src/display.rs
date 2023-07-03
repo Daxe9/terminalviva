@@ -12,7 +12,7 @@ struct SimpleGrade {
     subject: String,
     date: String,
     grade: f32,
-    subjectType: String,
+    subject_type: String,
     weight: f32,
 }
 
@@ -37,7 +37,7 @@ impl SimpleGrade {
             subject,
             date: grade.evtDate,
             grade: grade.decimalValue,
-            subjectType: grade.componentDesc,
+            subject_type: grade.componentDesc,
             weight: grade.weightFactor,
         }
     }
@@ -90,6 +90,54 @@ pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
 
     let simplified_grades = sort_date_grade(simplified_grades, grade_settings.settings.desc_date);
     let mut table = Table::new(simplified_grades);
+    table
+        .with(Style::rounded())
+        // align the first row to the center
+        .with(Modify::new(Rows::first()).with(Alignment::center()));
+
+    table.to_string()
+}
+
+
+#[allow(non_snake_case)]
+#[derive(Tabled)]
+struct SimpleAbsence {
+    id: String,
+    date: String,
+    justified: bool,
+    reason: String,
+    code: String,
+}
+
+impl SimpleAbsence {
+    fn from_absence(absence: Absence) -> Self {
+        let (reason, code) = if absence.justifReasonDesc.is_none() {
+            ("N/A".to_string(), "N/A".to_string())
+        } else {
+            (
+                absence.justifReasonDesc.unwrap(),
+                absence.justifReasonCode.unwrap(),
+            )
+        };
+        SimpleAbsence {
+            id: absence.evtCode,
+            date: absence.evtDate,
+            justified: absence.isJustified,
+            reason,
+            code,
+        }
+    }
+}
+
+
+pub fn display_absences(absences: Absences) -> String {
+    let simplified_absences: Vec<SimpleAbsence> = absences
+        .events
+        .into_iter()
+        .map(SimpleAbsence::from_absence)
+        .collect();
+
+    let mut table = Table::new(simplified_absences);
     table
         .with(Style::rounded())
         // align the first row to the center

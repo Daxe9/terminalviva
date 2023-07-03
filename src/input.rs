@@ -62,7 +62,8 @@ pub async fn process_input() {
         }
         Commands::Absence => {
             let result = api::absences_request().await;
-            println!("{result}");
+            let result = display::display_absences(result);
+            println!("{}", result);
         }
         Commands::Grade => {
             let grade_settings = GradeSettings::new(settings, args.name);

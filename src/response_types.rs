@@ -11,6 +11,7 @@ use serde_json::Value;
 pub enum ResponseResult {
     ExpiredToken(ExpiredToken),
     Grades(Grades),
+    Absences(Absences),
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpiredToken {
@@ -21,6 +22,12 @@ pub struct ExpiredToken {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Grades {
     pub grades: Vec<Grade>,
+}
+
+impl Grades {
+    pub fn new() -> Self {
+        Grades { grades: Vec::new() }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -56,12 +63,36 @@ pub struct Grade {
     pub oldskillId: u32,
     pub oldskillDesc: String,
 }
+ 
 
-impl Grades {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Absences {
+    pub events: Vec<Absence>,
+}
+
+impl Absences {
     pub fn new() -> Self {
-        Grades { grades: Vec::new() }
+        Absences { events: Vec::new() }
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Absence {
+    pub evtId: u32,
+    // TODO: find out each code's meaning
+    pub evtCode: String,
+    pub evtDate: String,
+    pub evtHPos: Option<u32>,
+    pub evtValue: Option<u32>,
+    pub isJustified: bool,
+    // TODO: find out each code's meaning
+    pub justifReasonCode: Option<String>,
+    pub justifReasonDesc: Option<String>,
+    // NOTE: The type of the vec is still unknown
+    pub hoursAbsence: Vec<Value>
+}
+
+
 
 #[derive(Deserialize)]
 #[serde(untagged)]
