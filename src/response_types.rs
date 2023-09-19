@@ -12,6 +12,7 @@ pub enum ResponseResult {
     ExpiredToken(ExpiredToken),
     Grades(Grades),
     Absences(Absences),
+    Agendas(Agendas),
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpiredToken {
@@ -92,6 +93,31 @@ pub struct Absence {
     pub hoursAbsence: Vec<Value>
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Agendas {
+    pub agenda: Vec<Agenda>,
+}
+
+impl Agendas {
+    pub fn new() -> Self {
+        Agendas { agenda: Vec::new() }
+    }
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Agenda {
+    pub evtId: u32,
+    // TODO: find out each code's meaning
+    pub evtCode: String,
+    pub evtDatetimeBegin: String,
+    pub evtDatetimeEnd: String,
+    pub isFullDay: bool,
+    pub notes: String,
+    pub authorName: String,
+    pub classDesc: String,
+    pub subjectId: Option<u32>,
+    pub subjectDesc: Option<String>,
+    pub homeworkId: Option<Value>
+}
 
 
 #[derive(Deserialize)]

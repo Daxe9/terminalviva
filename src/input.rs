@@ -18,6 +18,8 @@ struct Args {
 
     #[arg(short, long, global = true, help = "Select a specific subject")]
     name: Option<String>,
+    #[arg(long, global = true, help = "Select a specific date(ISO 8601, YYYY-MM-DD)")]
+    date: Option<String>
 }
 
 #[derive(Subcommand, Debug)]
@@ -28,6 +30,8 @@ enum Commands {
     Absence,
     #[clap(name = "login", about = "Login to spaggiari")]
     Login,
+    #[clap(name = "agenda", about = "Display agenda of the current user, default is the current day")]
+    Agenda,
     Test,
 }
 
@@ -51,6 +55,32 @@ impl GradeSettings {
     }
 }
 
+pub struct AgendaSettings {
+    pub settings: Settings,
+    pub date: Option<String>,
+}
+
+impl AgendaSettings {
+    fn new(settings: Settings, date: Option<String>) -> Self {
+        let date = match date {
+            Some(date) => {
+                // validate an iso 8601 string
+                match chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d") {
+                    Ok(date) => {
+                        Some(date.to_string().replace("-", ""))
+                    },
+                    Err(_) => {
+                        panic!("Invalid date format, please use ISO 8601 format(YYYY-MM-DD)");
+                    }
+                }
+                    
+            },
+            None => None,
+        };
+        AgendaSettings { settings, date }
+    }
+}
+
 pub async fn process_input() {
     let args = Args::parse();
 
@@ -69,6 +99,12 @@ pub async fn process_input() {
             let grade_settings = GradeSettings::new(settings, args.name);
             let result = api::grades_request().await;
             let result = display::display_grades(result, grade_settings);
+            println!("{}", result);
+        },
+        Commands::Agenda => {
+            let agenda_settins = AgendaSettings::new(settings, args.date);
+            let result = api::agenda_request(agenda_settins.date).await;
+            let result = display::display_agenda(result);
             println!("{}", result);
         }
         Commands::Test => {

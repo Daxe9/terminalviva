@@ -14,3 +14,4 @@ config = { version = "0.13.3", features = ["toml"] }
 lazy_static = "1.4.0"
 tabled = "0.12.2"
 clap = { version = "4.3.9", features = ["derive"]}
+chrono = "0.4.26"

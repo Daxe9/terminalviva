@@ -3,6 +3,7 @@ use crate::response_types::*;
 use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
 use std::io::Write;
 use std::path::Path;
+use chrono::prelude::Utc;
 
 use serde::{Deserialize, Serialize};
 
@@ -39,10 +40,10 @@ impl LoginData {
 }
 
 /*
-    Check whether the file exists or not
-    if it exists, remove it in order to create a new one with updated token
-    Otherwise, create a new one with the token
-*/
+   Check whether the file exists or not
+   if it exists, remove it in order to create a new one with updated token
+   Otherwise, create a new one with the token
+   */
 fn update_token(token_credential: &TokenCredential) {
     let file_path = Path::new(".credentials.json");
     let existing_token_file = file_path.exists();
@@ -84,10 +85,10 @@ async fn get_request(url: &str) -> String {
         .header("z-auth-token", token_credential.token.as_str())
         .send()
         .await
-    {
-        Ok(v) => v,
-        Err(e) => panic!("error sending get request at {}: {}", url, e),
-    };
+        {
+            Ok(v) => v,
+            Err(e) => panic!("error sending get request at {}: {}", url, e),
+        };
 
     raw_result
         .text()
@@ -126,10 +127,10 @@ pub async fn login() -> TokenCredential {
         .json(&login_data)
         .send()
         .await
-    {
-        Ok(v) => v,
-        Err(e) => panic!("error sending login request: {}", e),
-    };
+        {
+            Ok(v) => v,
+            Err(e) => panic!("error sending login request: {}", e),
+        };
     let mut token_credential = TokenCredential {
         token: String::new(),
         tokenAP: String::new(),
@@ -140,10 +141,6 @@ pub async fn login() -> TokenCredential {
         Ok(res) => {
             match res {
                 LoginResponse::LoginPayload(v) => {
-                    // println!("token: {}", v.token);
-                    // // expired Token bZy34ISgtlBPfZ+CU48rWJGT6+6WZrOiI711xrjuFI7+eaQNfK1QFSD3Uj3/ceuDMwWhLu+nGA0ugSVhPfphOr/5kvtIJ5FgDAbzKFqzi824TP6HxFPZ2bJeDhg3uzin6OU0Aht4/vTpBQ5tQSqNZN36F05MTgkiW9er3wsGg56hFA8CKhPbgSz1aptdgSeTANrKwr54xFl7d20a+NIg5arv0gMxR9s/pzn2UMvyCf94JxlWKC4Ld0/7IXxeO1T6Zr4/dCNxTJayQxhPO8eapJCKSWDXeD6fYwJxDd0ltmH3dC2+0M73bLNCV8r7ZnFOCDdOoyzApUZYErOS1xT5loTp2qvlIv7tIN5Pa2gyicV7MDRawr9UfcyaTC/ZR1zdpV7elMHF11bH5Vc71CSe6g==
-                    // println!("tokenAP: {}", v.tokenAP);
-                    // // expired TokenAP 8zOV/SqmpGRpQ3kzBqrl3GqFzmQC4U2L4IwoD84UI70N8PBpEhfqqCA4PmVZ8nWeeCcZViguC3dP+yF8XjtU+m5MtPQV8Hb0UPfR2YqjLpJZbUyyDgeaOqpnFRJRnISgMUAGQ8d+J6Q/nvY4M5XW0FZaNQRZLDH/UmEK14wwyWNKvbk6OWjTGl/0Hrfyeo4vQ3rtsqtcr5T/cS7cQ/XZtJPu8UcEmpwYZ0ArpAGOo7zmepxYGnE44mi+dUQ0Ylj+a3kzkyUXXpN8HdW8CQneME+XMeZSfYMKJcmbFsNXIl14ypPM++NicCSVOiVzWwxuPSgXbBNnTj5Qn01Nsfy36oYeZ86b0Kbrr91ts/VHBeWHDSuLPZ88u4lp9eBHS4YN9bqlAlB+vx4IjAka2yIboQ==
                     token_credential.token = v.token;
                     token_credential.tokenAP = v.tokenAP;
                     // remove the first and the last character from the ident field to obtain the studentId
@@ -245,4 +242,52 @@ pub async fn grades_request() -> Grades {
         };
     }
     result
+}
+
+// The default behavior should be fetching the agenda of the current day
+pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
+    // get a date in format like this 20230901
+
+    let date = if selected_date.is_none() {
+        let temp = Utc::now();
+        temp.format("%Y%m%d").to_string()
+    } else {
+        selected_date.unwrap()
+    };
+
+    // make the url
+    let url = format!("{}/students/<studentID>/agenda/all/{}/{}", BASE_URL, &date, date);
+
+    let mut result = Agendas::new();
+    loop {
+        let raw_result = get_request(&url).await;
+
+        match serde_json::from_str(&raw_result) {
+            Ok(response) => {
+                match response {
+                    ResponseResult::ExpiredToken(_) => {
+                        println!("Re-login...");
+                        // Re-login
+                        let token_credential = login().await;
+
+                        // replace the token
+                        TOKEN.lock().unwrap().replace(token_credential);
+                    }
+                    ResponseResult::Agendas(payload) => {
+                        result = payload;
+                        break;
+                    }
+
+                    _ => {
+                        panic!("[ERROR]: Wrong return type upon api call {}", raw_result)
+                    }
+                }
+            }
+            Err(e) => {
+                panic!("[ERROR]: Parsing grades response: {}", e)
+            }
+        };
+    }
+    result
+
 }

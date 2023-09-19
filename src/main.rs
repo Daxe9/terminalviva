@@ -11,6 +11,8 @@ use std::sync::Mutex;
 lazy_static! {
     pub static ref DEFAULT_HEADERS: HeaderMap = settings::get_default_headers();
     pub static ref CONFIG: Option<Config> = settings::get_config();
+    // this is made with mutex, however, this is single-threaded.
+    // The only purpose of mutex in this case is to make it mutable.
     pub static ref TOKEN: Mutex<Option<api::TokenCredential>> = settings::get_token();
 }
 

@@ -63,9 +63,9 @@ fn sort_date_grade(grades: Vec<SimpleGrade>, from_oldest_to_youngest: bool) -> V
         let b_date = b_date[0] * 365 + b_date[1] * 30 + b_date[2];
 
         if from_oldest_to_youngest {
-            a_date.cmp(&b_date)
-        } else {
             b_date.cmp(&a_date)
+        } else {
+            a_date.cmp(&b_date)
         }
     });
 
@@ -119,8 +119,16 @@ impl SimpleAbsence {
                 absence.justifReasonCode.unwrap(),
             )
         };
+
+        let type_absence = match &absence.evtCode[..] {
+            "ABA0" => "Assenza",
+            "ABR0" => "Ritardo",
+            "ABR1" => "R. Breve",
+            _ => ""
+        };
+
         SimpleAbsence {
-            id: absence.evtCode,
+            id: type_absence.to_string(),
             date: absence.evtDate,
             justified: absence.isJustified,
             reason,
@@ -138,6 +146,43 @@ pub fn display_absences(absences: Absences) -> String {
         .collect();
 
     let mut table = Table::new(simplified_absences);
+    table
+        .with(Style::rounded())
+        // align the first row to the center
+        .with(Modify::new(Rows::first()).with(Alignment::center()));
+
+    table.to_string()
+}
+
+
+#[allow(non_snake_case)]
+#[derive(Tabled)]
+struct SimpleAgenda {
+    code: String,
+    notes: String,
+    teacher: String,
+    class: String,
+}
+
+impl SimpleAgenda {
+    fn from_agenda(agenda: Agenda) -> Self {
+        SimpleAgenda {
+            code: agenda.evtCode,
+            teacher: agenda.authorName,
+            class: agenda.classDesc,
+            notes: agenda.notes
+        }
+    }
+}
+
+pub fn display_agenda(agenda: Agendas) -> String {
+    let simplified_agenda: Vec<SimpleAgenda> = agenda
+        .agenda
+        .into_iter()
+        .map(SimpleAgenda::from_agenda)
+        .collect();
+
+    let mut table = Table::new(simplified_agenda);
     table
         .with(Style::rounded())
         // align the first row to the center
