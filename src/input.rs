@@ -70,7 +70,7 @@ impl AgendaSettings {
                         Some(date.to_string().replace("-", ""))
                     },
                     Err(_) => {
-                        panic!("Invalid date format, please use ISO 8601 format(YYYY-MM-DD)");
+                        panic!("Invalid date format, please follow ISO 8601 standard format(YYYY-MM-DD)");
                     }
                 }
                     
@@ -102,8 +102,8 @@ pub async fn process_input() {
             println!("{}", result);
         },
         Commands::Agenda => {
-            let agenda_settins = AgendaSettings::new(settings, args.date);
-            let result = api::agenda_request(agenda_settins.date).await;
+            let agenda_settings = AgendaSettings::new(settings, args.date);
+            let result = api::agenda_request(agenda_settings.date).await;
             let result = display::display_agenda(result);
             println!("{}", result);
         }

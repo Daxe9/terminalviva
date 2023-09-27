@@ -1,10 +1,12 @@
+use chrono::{FixedOffset, DateTime};
 use crate::input::GradeSettings;
 use crate::response_types::*;
-use tabled::settings::Alignment;
+use tabled::settings::{Alignment, Width};
 use tabled::{
-    settings::{object::Rows, Modify, Style},
-    Table, Tabled,
+    settings::{object::{Rows, Row}, Modify, Style, Border},
+    Table, Tabled, 
 };
+use tabled::settings::style::{HorizontalLine};
 
 #[allow(non_snake_case)]
 #[derive(Tabled)]
@@ -158,35 +160,65 @@ pub fn display_absences(absences: Absences) -> String {
 #[allow(non_snake_case)]
 #[derive(Tabled)]
 struct SimpleAgenda {
+    #[tabled(skip)]
+    time: DateTime<FixedOffset>,
+    date: String,
     code: String,
     notes: String,
     teacher: String,
-    class: String,
 }
 
 impl SimpleAgenda {
     fn from_agenda(agenda: Agenda) -> Self {
+        let processed_time = DateTime::parse_from_str(
+            &agenda.evtDatetimeBegin,
+            "%Y-%m-%dT%H:%M:%S%z",
+        ).unwrap();
         SimpleAgenda {
-            code: agenda.evtCode,
+            time: processed_time,
+            code: match &agenda.evtCode[..] {
+                "AGHW" => "Homework".to_string(),
+                "AGNT" => "Nota".to_string(),
+                _ => agenda.evtCode
+            },
             teacher: agenda.authorName,
-            class: agenda.classDesc,
-            notes: agenda.notes
+            notes: agenda.notes,
+            date: "".to_string(),
         }
     }
 }
 
 pub fn display_agenda(agenda: Agendas) -> String {
-    let simplified_agenda: Vec<SimpleAgenda> = agenda
+    // TODO: sort the agenda by date
+    let mut simplified_agenda: Vec<SimpleAgenda> = agenda
         .agenda
         .into_iter()
         .map(SimpleAgenda::from_agenda)
         .collect();
 
+    simplified_agenda.sort_by(|a, b| {
+        a.time.cmp(&b.time)
+    });
+
+    for record in simplified_agenda.iter_mut() {
+        record.date = record.time.format("%Y-%m-%d %A").to_string();
+    }
+    // simplified_agenda.iter_mut().map(|mut a| {
+    //     // format the date to yyyy-mm-dd weekday
+    //     let temp = DateTime::parse_from_str(&a.time.to_string(), "%Y-%m-%d %A").unwrap();
+    //     a.time = temp;
+    //     a
+    // }); 
+    let style = Style::modern();
+        //.horizontals([HorizontalLine::new(2, Style::rounded().get_horizontal())]);
+        
     let mut table = Table::new(simplified_agenda);
     table
-        .with(Style::rounded())
+        .with(style)
         // align the first row to the center
-        .with(Modify::new(Rows::first()).with(Alignment::center()));
+        .with(Modify::new(Rows::first()).with(Alignment::center()))
+        .with(Modify::new(Rows::new(1..)).with(Width::wrap(30).keep_words()));
+
 
     table.to_string()
 }

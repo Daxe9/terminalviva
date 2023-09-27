@@ -3,7 +3,7 @@ use crate::response_types::*;
 use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
 use std::io::Write;
 use std::path::Path;
-use chrono::prelude::Utc;
+use chrono::{offset::Local, Datelike, Weekday, Duration};
 
 use serde::{Deserialize, Serialize};
 
@@ -58,6 +58,33 @@ fn update_token(token_credential: &TokenCredential) {
     let token_credential_json = serde_json::to_string(&token_credential).unwrap();
     // write json to file
     file.write_all(token_credential_json.as_bytes()).unwrap();
+}
+
+fn get_week_date() -> (String, String) {
+    let mut current_time = Local::now();
+
+    let temp = current_time.date_naive().weekday();
+
+    let current_day = match temp {
+        Weekday::Sun => {
+            current_time += Duration::days(1);
+            temp.succ()
+        },
+        Weekday::Sat => {
+            current_time += Duration::days(2);
+            temp.succ().succ()
+        },
+        _ => temp,
+    };
+
+    let current_day_iso = current_time.format("%Y%m%d").to_string();
+    // TODO: add check for saturday and sunday
+    let days_to_friday = (4 - current_day.num_days_from_monday()) as i64;
+
+    let friday_time = current_time + Duration::days(days_to_friday);
+    let friday_iso = friday_time.format("%Y%m%d").to_string();
+
+    (current_day_iso, friday_iso)
 }
 
 async fn get_request(url: &str) -> String {
@@ -244,19 +271,21 @@ pub async fn grades_request() -> Grades {
     result
 }
 
-// The default behavior should be fetching the agenda of the current day
+// The default behavior of the request is fetching the agenda of the current day
 pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
     // get a date in format like this 20230901
 
-    let date = if selected_date.is_none() {
-        let temp = Utc::now();
-        temp.format("%Y%m%d").to_string()
+    // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
+    let (start, end): (String, String) = if selected_date.is_none() {
+        get_week_date()
     } else {
-        selected_date.unwrap()
+        // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
+        let date = selected_date.unwrap();
+        (date.clone(), date)
     };
 
     // make the url
-    let url = format!("{}/students/<studentID>/agenda/all/{}/{}", BASE_URL, &date, date);
+    let url = format!("{}/students/<studentID>/agenda/all/{}/{}", BASE_URL, start, end);
 
     let mut result = Agendas::new();
     loop {
@@ -275,6 +304,7 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
                     }
                     ResponseResult::Agendas(payload) => {
                         result = payload;
+                        println!("{:?}", result);
                         break;
                     }
 
