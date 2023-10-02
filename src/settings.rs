@@ -10,6 +10,12 @@ struct DefaultHeaders {
     pub value: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConfigSettings {
+    #[serde(alias = "wrap-width")]
+    pub wrap_width: usize,
+}
+
 pub fn get_config() -> Option<Config> {
     // get config instance from config.toml
     let config = match Config::builder()
@@ -22,6 +28,15 @@ pub fn get_config() -> Option<Config> {
     Some(config)
 }
 
+pub fn get_config_settings() -> ConfigSettings {
+    let config_settings: ConfigSettings = match crate::CONFIG.as_ref().unwrap().get("settings") {
+        Ok(v) => v,
+        Err(e) => panic!("error at parsing config settings: {}", e),
+    };
+
+    config_settings
+}
+
 pub fn get_default_headers() -> HeaderMap {
     // get default headers
     let mut headers = HeaderMap::new();
@@ -30,7 +45,7 @@ pub fn get_default_headers() -> HeaderMap {
     let raw_default_headers: Vec<DefaultHeaders> =
         match crate::CONFIG.as_ref().unwrap().get("headers") {
             Ok(v) => v,
-            Err(e) => panic!("error parsing default_headers: {}", e),
+            Err(e) => panic!("error at parsing default_headers: {}", e),
         };
 
     // convert raw_default_headers to HeaderMap

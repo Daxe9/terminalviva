@@ -1,5 +1,6 @@
 use crate::input::GradeSettings;
 use crate::response_types::*;
+use crate::CONFIG_SETTINGS;
 use chrono::{DateTime, FixedOffset};
 use tabled::{
     settings::{object::Rows, Alignment, Modify, Style, Width},
@@ -15,7 +16,10 @@ impl DefaultStyle for Table {
         self.with(Style::modern())
             // align the first row to the center
             .with(Modify::new(Rows::first()).with(Alignment::center()))
-            .with(Modify::new(Rows::new(1..)).with(Width::wrap(30).keep_words()));
+            .with(
+                Modify::new(Rows::new(1..))
+                    .with(Width::wrap(CONFIG_SETTINGS.wrap_width).keep_words()),
+            );
     }
 }
 
@@ -203,7 +207,6 @@ pub fn display_agenda(agenda: Agendas) -> String {
         .into_iter()
         .map(SimpleAgenda::from_agenda)
         .collect();
-
 
     if simplified_agenda.is_empty() {
         return String::from("No records");

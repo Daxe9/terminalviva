@@ -290,6 +290,7 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
         BASE_URL, start, end
     );
 
+    #[allow(warnings)]
     let mut result = Agendas::new();
     loop {
         let raw_result = get_request(&url).await;
@@ -307,7 +308,6 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
                     }
                     ResponseResult::Agendas(payload) => {
                         result = payload;
-                        println!("{:?}", result);
                         break;
                     }
 

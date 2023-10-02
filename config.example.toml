@@ -1,3 +1,6 @@
+[settings]
+wrap-width = 30
+
 [credentials]
 username = ""
 password = ""
