@@ -64,7 +64,6 @@ pub struct Grade {
     pub oldskillId: u32,
     pub oldskillDesc: String,
 }
- 
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Absences {
@@ -90,7 +89,7 @@ pub struct Absence {
     pub justifReasonCode: Option<String>,
     pub justifReasonDesc: Option<String>,
     // NOTE: The type of the vec is still unknown
-    pub hoursAbsence: Vec<Value>
+    pub hoursAbsence: Vec<Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -116,9 +115,8 @@ pub struct Agenda {
     pub classDesc: String,
     pub subjectId: Option<u32>,
     pub subjectDesc: Option<String>,
-    pub homeworkId: Option<Value>
+    pub homeworkId: Option<Value>,
 }
-
 
 #[derive(Deserialize)]
 #[serde(untagged)]

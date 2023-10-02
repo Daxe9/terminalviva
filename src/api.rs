@@ -1,9 +1,9 @@
 // Module: api
 use crate::response_types::*;
 use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
+use chrono::{offset::Local, Datelike, Duration, Weekday};
 use std::io::Write;
 use std::path::Path;
-use chrono::{offset::Local, Datelike, Weekday, Duration};
 
 use serde::{Deserialize, Serialize};
 
@@ -40,10 +40,10 @@ impl LoginData {
 }
 
 /*
-   Check whether the file exists or not
-   if it exists, remove it in order to create a new one with updated token
-   Otherwise, create a new one with the token
-   */
+Check whether the file exists or not
+if it exists, remove it in order to create a new one with updated token
+Otherwise, create a new one with the token
+*/
 fn update_token(token_credential: &TokenCredential) {
     let file_path = Path::new(".credentials.json");
     let existing_token_file = file_path.exists();
@@ -69,11 +69,11 @@ fn get_week_date() -> (String, String) {
         Weekday::Sun => {
             current_time += Duration::days(1);
             temp.succ()
-        },
+        }
         Weekday::Sat => {
             current_time += Duration::days(2);
             temp.succ().succ()
-        },
+        }
         _ => temp,
     };
 
@@ -112,10 +112,10 @@ async fn get_request(url: &str) -> String {
         .header("z-auth-token", token_credential.token.as_str())
         .send()
         .await
-        {
-            Ok(v) => v,
-            Err(e) => panic!("error sending get request at {}: {}", url, e),
-        };
+    {
+        Ok(v) => v,
+        Err(e) => panic!("error sending get request at {}: {}", url, e),
+    };
 
     raw_result
         .text()
@@ -154,10 +154,10 @@ pub async fn login() -> TokenCredential {
         .json(&login_data)
         .send()
         .await
-        {
-            Ok(v) => v,
-            Err(e) => panic!("error sending login request: {}", e),
-        };
+    {
+        Ok(v) => v,
+        Err(e) => panic!("error sending login request: {}", e),
+    };
     let mut token_credential = TokenCredential {
         token: String::new(),
         tokenAP: String::new(),
@@ -285,7 +285,10 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
     };
 
     // make the url
-    let url = format!("{}/students/<studentID>/agenda/all/{}/{}", BASE_URL, start, end);
+    let url = format!(
+        "{}/students/<studentID>/agenda/all/{}/{}",
+        BASE_URL, start, end
+    );
 
     let mut result = Agendas::new();
     loop {
@@ -319,5 +322,4 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
         };
     }
     result
-
 }

@@ -1,12 +1,23 @@
-use chrono::{FixedOffset, DateTime};
 use crate::input::GradeSettings;
 use crate::response_types::*;
-use tabled::settings::{Alignment, Width};
+use chrono::{DateTime, FixedOffset};
 use tabled::{
-    settings::{object::{Rows, Row}, Modify, Style, Border},
-    Table, Tabled, 
+    settings::{object::Rows, Alignment, Modify, Style, Width},
+    Table, Tabled,
 };
-use tabled::settings::style::{HorizontalLine};
+
+trait DefaultStyle {
+    fn add_default_style(&mut self);
+}
+
+impl DefaultStyle for Table {
+    fn add_default_style(&mut self) {
+        self.with(Style::modern())
+            // align the first row to the center
+            .with(Modify::new(Rows::first()).with(Alignment::center()))
+            .with(Modify::new(Rows::new(1..)).with(Width::wrap(30).keep_words()));
+    }
+}
 
 #[allow(non_snake_case)]
 #[derive(Tabled)]
@@ -81,6 +92,10 @@ pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
         .map(SimpleGrade::from_grade)
         .collect();
 
+    if simplified_grades.is_empty() {
+        return String::from("No records");
+    }
+
     // filter it by name if the name is specified
     let simplified_grades: Vec<SimpleGrade> = match grade_settings.name {
         Some(name) => simplified_grades
@@ -92,14 +107,10 @@ pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
 
     let simplified_grades = sort_date_grade(simplified_grades, grade_settings.settings.desc_date);
     let mut table = Table::new(simplified_grades);
-    table
-        .with(Style::rounded())
-        // align the first row to the center
-        .with(Modify::new(Rows::first()).with(Alignment::center()));
+    table.add_default_style();
 
     table.to_string()
 }
-
 
 #[allow(non_snake_case)]
 #[derive(Tabled)]
@@ -126,7 +137,7 @@ impl SimpleAbsence {
             "ABA0" => "Assenza",
             "ABR0" => "Ritardo",
             "ABR1" => "R. Breve",
-            _ => ""
+            _ => "",
         };
 
         SimpleAbsence {
@@ -139,7 +150,6 @@ impl SimpleAbsence {
     }
 }
 
-
 pub fn display_absences(absences: Absences) -> String {
     let simplified_absences: Vec<SimpleAbsence> = absences
         .events
@@ -147,15 +157,15 @@ pub fn display_absences(absences: Absences) -> String {
         .map(SimpleAbsence::from_absence)
         .collect();
 
+    if simplified_absences.is_empty() {
+        return String::from("No records");
+    }
+
     let mut table = Table::new(simplified_absences);
-    table
-        .with(Style::rounded())
-        // align the first row to the center
-        .with(Modify::new(Rows::first()).with(Alignment::center()));
+    table.add_default_style();
 
     table.to_string()
 }
-
 
 #[allow(non_snake_case)]
 #[derive(Tabled)]
@@ -170,16 +180,14 @@ struct SimpleAgenda {
 
 impl SimpleAgenda {
     fn from_agenda(agenda: Agenda) -> Self {
-        let processed_time = DateTime::parse_from_str(
-            &agenda.evtDatetimeBegin,
-            "%Y-%m-%dT%H:%M:%S%z",
-        ).unwrap();
+        let processed_time =
+            DateTime::parse_from_str(&agenda.evtDatetimeBegin, "%Y-%m-%dT%H:%M:%S%z").unwrap();
         SimpleAgenda {
             time: processed_time,
             code: match &agenda.evtCode[..] {
                 "AGHW" => "Homework".to_string(),
                 "AGNT" => "Nota".to_string(),
-                _ => agenda.evtCode
+                _ => agenda.evtCode,
             },
             teacher: agenda.authorName,
             notes: agenda.notes,
@@ -196,9 +204,12 @@ pub fn display_agenda(agenda: Agendas) -> String {
         .map(SimpleAgenda::from_agenda)
         .collect();
 
-    simplified_agenda.sort_by(|a, b| {
-        a.time.cmp(&b.time)
-    });
+
+    if simplified_agenda.is_empty() {
+        return String::from("No records");
+    }
+
+    simplified_agenda.sort_by(|a, b| a.time.cmp(&b.time));
 
     for record in simplified_agenda.iter_mut() {
         record.date = record.time.format("%Y-%m-%d %A").to_string();
@@ -208,17 +219,11 @@ pub fn display_agenda(agenda: Agendas) -> String {
     //     let temp = DateTime::parse_from_str(&a.time.to_string(), "%Y-%m-%d %A").unwrap();
     //     a.time = temp;
     //     a
-    // }); 
-    let style = Style::modern();
-        //.horizontals([HorizontalLine::new(2, Style::rounded().get_horizontal())]);
-        
-    let mut table = Table::new(simplified_agenda);
-    table
-        .with(style)
-        // align the first row to the center
-        .with(Modify::new(Rows::first()).with(Alignment::center()))
-        .with(Modify::new(Rows::new(1..)).with(Width::wrap(30).keep_words()));
+    // });
+    //.horizontals([HorizontalLine::new(2, Style::rounded().get_horizontal())]);
 
+    let mut table = Table::new(simplified_agenda);
+    table.add_default_style();
 
     table.to_string()
 }

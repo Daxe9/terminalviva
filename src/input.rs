@@ -18,8 +18,12 @@ struct Args {
 
     #[arg(short, long, global = true, help = "Select a specific subject")]
     name: Option<String>,
-    #[arg(long, global = true, help = "Select a specific date(ISO 8601, YYYY-MM-DD)")]
-    date: Option<String>
+    #[arg(
+        long,
+        global = true,
+        help = "Select a specific date(ISO 8601, YYYY-MM-DD)"
+    )]
+    date: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -30,7 +34,10 @@ enum Commands {
     Absence,
     #[clap(name = "login", about = "Login to spaggiari")]
     Login,
-    #[clap(name = "agenda", about = "Display agenda of the current user, default is the current day")]
+    #[clap(
+        name = "agenda",
+        about = "Display agenda of the current user, default is the current day"
+    )]
     Agenda,
     Test,
 }
@@ -66,15 +73,12 @@ impl AgendaSettings {
             Some(date) => {
                 // validate an iso 8601 string
                 match chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d") {
-                    Ok(date) => {
-                        Some(date.to_string().replace("-", ""))
-                    },
+                    Ok(date) => Some(date.to_string().replace("-", "")),
                     Err(_) => {
                         panic!("Invalid date format, please follow ISO 8601 standard format(YYYY-MM-DD)");
                     }
                 }
-                    
-            },
+            }
             None => None,
         };
         AgendaSettings { settings, date }
@@ -100,7 +104,7 @@ pub async fn process_input() {
             let result = api::grades_request().await;
             let result = display::display_grades(result, grade_settings);
             println!("{}", result);
-        },
+        }
         Commands::Agenda => {
             let agenda_settings = AgendaSettings::new(settings, args.date);
             let result = api::agenda_request(agenda_settings.date).await;
