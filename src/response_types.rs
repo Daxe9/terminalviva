@@ -1,5 +1,3 @@
-// NOTE: Structs prefixed with U are unused structs, however they are necessary for the deserialization of the JSON response
-
 // disable snake case warning for this file
 #![allow(non_snake_case)]
 
@@ -13,6 +11,7 @@ pub enum ResponseResult {
     Grades(Grades),
     Absences(Absences),
     Agendas(Agendas),
+    Lessons(Lessons)
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpiredToken {
@@ -145,4 +144,34 @@ pub struct LoginError {
     pub error: String,
     pub info: String,
     pub message: String,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Lessons {
+    pub lessons: Vec<Lesson>,
+}
+
+impl Lessons {
+    pub fn new() -> Self {
+        Lessons { lessons: Vec::new() }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Lesson {
+    pub evtId: u32,
+    pub evtDate: String,
+    pub evtCode: String,
+    pub evtHPos: u32,
+    pub evtDuration: u32,
+    pub classDesc: String,
+    pub authorName: String,
+    pub subjectId: Option<u32>,
+    pub subjectCode: Option<Value>,
+    pub subjectDesc: Option<String>,
+    pub lessonType: Option<String>,
+    pub lessonArg: String
+
+
 }

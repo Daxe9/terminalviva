@@ -30,6 +30,8 @@ struct Args {
 enum Commands {
     #[clap(name = "grade", about = "Display grades of the current user")]
     Grade,
+    #[clap(name = "lesson", about = "Display current week lessons")]
+    Lesson,
     #[clap(name = "absence", about = "Display absences of the current user")]
     Absence,
     #[clap(name = "login", about = "Login to spaggiari")]
@@ -110,6 +112,13 @@ pub async fn process_input() {
             let result = api::agenda_request(agenda_settings.date).await;
             let result = display::display_agenda(result);
             println!("{}", result);
+        }
+        Commands::Lesson => {
+            let lesson_settings = AgendaSettings::new(settings, args.date);
+            let result = api::lessons_request(lesson_settings.date).await;
+            let result = display::display_lessons(result);
+            println!("{}", result);
+
         }
         Commands::Test => {
             println!("Test");

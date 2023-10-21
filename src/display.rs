@@ -1,7 +1,7 @@
 use crate::input::GradeSettings;
 use crate::response_types::*;
 use crate::CONFIG_SETTINGS;
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, NaiveDate};
 use tabled::{
     settings::{object::Rows, Alignment, Modify, Style, Width},
     Table, Tabled,
@@ -201,7 +201,6 @@ impl SimpleAgenda {
 }
 
 pub fn display_agenda(agenda: Agendas) -> String {
-    // TODO: sort the agenda by date
     let mut simplified_agenda: Vec<SimpleAgenda> = agenda
         .agenda
         .into_iter()
@@ -217,15 +216,65 @@ pub fn display_agenda(agenda: Agendas) -> String {
     for record in simplified_agenda.iter_mut() {
         record.date = record.time.format("%Y-%m-%d %A").to_string();
     }
-    // simplified_agenda.iter_mut().map(|mut a| {
-    //     // format the date to yyyy-mm-dd weekday
-    //     let temp = DateTime::parse_from_str(&a.time.to_string(), "%Y-%m-%d %A").unwrap();
-    //     a.time = temp;
-    //     a
-    // });
-    //.horizontals([HorizontalLine::new(2, Style::rounded().get_horizontal())]);
 
     let mut table = Table::new(simplified_agenda);
+    table.add_default_style();
+
+    table.to_string()
+}
+
+
+#[allow(non_snake_case)]
+#[derive(Tabled)]
+struct SimpleLesson {
+    #[tabled(skip)]
+    time: DateTime<FixedOffset>,
+    date: String,
+    desc: String,
+    code: String,
+    teacher: String
+}
+
+impl SimpleLesson {
+    fn from_lesson(lesson: Lesson) -> Self {
+        // create a NaiveDate instance from a string with format %Y-%m-%d
+        let naive_date = NaiveDate::parse_from_str(&lesson.evtDate, "%Y-%m-%d").expect("Invalid date format");
+        // create NaiveDateTime instance from NaiveDate
+        let naive_time = naive_date.and_hms_opt(0, 0, 0).unwrap();
+
+        // create offset for DateTime<FixedOffset>
+        let fixed_offset = FixedOffset::east_opt(0).unwrap();
+
+        let processed_time =
+            DateTime::<FixedOffset>::from_utc(naive_time, fixed_offset);
+        SimpleLesson {
+            time: processed_time,
+            desc: lesson.lessonArg,
+            teacher: lesson.authorName,
+            code: lesson.evtCode,
+            date: String::from("")
+        }
+    }
+}
+
+pub fn display_lessons(lessons: Lessons) -> String {
+    let mut simplified_lessons: Vec<SimpleLesson> = lessons
+        .lessons
+        .into_iter()
+        .map(SimpleLesson::from_lesson)
+        .collect();
+
+    if simplified_lessons.is_empty() {
+        return String::from("No records");
+    }
+
+    simplified_lessons.sort_by(|a, b| a.time.cmp(&b.time));
+
+    for record in simplified_lessons.iter_mut() {
+        record.date = record.time.format("%Y-%m-%d %A").to_string();
+    }
+
+    let mut table = Table::new(simplified_lessons);
     table.add_default_style();
 
     table.to_string()

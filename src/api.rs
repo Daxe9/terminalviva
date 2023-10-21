@@ -60,7 +60,23 @@ fn update_token(token_credential: &TokenCredential) {
     file.write_all(token_credential_json.as_bytes()).unwrap();
 }
 
-fn get_week_date() -> (String, String) {
+fn get_lessons_week_date() -> (String, String) {
+    let current_time = Local::now();
+    let temp_start = current_time.date_naive().weekday();
+    let days_from_monday = temp_start.number_from_monday() - 1;
+    println!("{}", days_from_monday);
+    let monday_time = current_time - Duration::days(days_from_monday as i64);
+    let friday_time = monday_time + Duration::days(5);
+
+    let monday_iso = monday_time.format("%Y%m%d").to_string();
+    let friday_iso = friday_time.format("%Y%m%d").to_string();
+
+
+
+    (monday_iso, friday_iso)
+}
+
+fn get_agenda_week_date() -> (String, String) {
     let mut current_time = Local::now();
 
     let temp = current_time.date_naive().weekday();
@@ -273,11 +289,9 @@ pub async fn grades_request() -> Grades {
 
 // The default behavior of the request is fetching the agenda of the current day
 pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
-    // get a date in format like this 20230901
-
     // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
     let (start, end): (String, String) = if selected_date.is_none() {
-        get_week_date()
+        get_agenda_week_date()
     } else {
         // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
         let date = selected_date.unwrap();
@@ -318,6 +332,57 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
             }
             Err(e) => {
                 panic!("[ERROR]: Parsing grades response: {}", e)
+            }
+        };
+    }
+    result
+}
+
+pub async fn lessons_request(selected_date: Option<String>) -> Lessons {
+    // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
+    let (start, end): (String, String) = if selected_date.is_none() {
+        get_lessons_week_date()
+    } else {
+        // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
+        let date = selected_date.unwrap();
+        (date.clone(), date)
+    };
+
+    // make the url
+    let url = format!(
+        "{}/students/<studentID>/lessons/{}/{}",
+        BASE_URL, start, end
+    );
+
+    // disable the warning for unused_assignments
+    #[allow(unused_assignments)]
+    let mut result = Lessons::new();
+    loop {
+        let raw_result = get_request(&url).await;
+
+        match serde_json::from_str(&raw_result) {
+            Ok(response) => {
+                match response {
+                    ResponseResult::ExpiredToken(_) => {
+                        println!("Re-login...");
+                        // Re-login
+                        let token_credential = login().await;
+
+                        // replace the token
+                        TOKEN.lock().unwrap().replace(token_credential);
+                    }
+                    ResponseResult::Lessons(payload) => {
+                        result = payload;
+                        break;
+                    }
+
+                    _ => {
+                        panic!("[ERROR]: Wrong return type upon api call {}", raw_result)
+                    }
+                }
+            }
+            Err(e) => {
+                panic!("[ERROR]: Parsing lessons response: {}", e)
             }
         };
     }
