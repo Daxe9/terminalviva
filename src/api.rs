@@ -1,7 +1,7 @@
 // Module: api
 use crate::response_types::*;
 use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
-use chrono::{offset::Local, Datelike, Duration, Weekday};
+use chrono::{offset::Local, Datelike, Duration, Weekday, DateTime};
 use std::io::Write;
 use std::path::Path;
 
@@ -60,23 +60,49 @@ fn update_token(token_credential: &TokenCredential) {
     file.write_all(token_credential_json.as_bytes()).unwrap();
 }
 
-fn get_lessons_week_date() -> (String, String) {
+fn get_next_week_date() -> (String, String) {
+    // get current time
     let current_time = Local::now();
-    let temp_start = current_time.date_naive().weekday();
-    let days_from_monday = temp_start.number_from_monday() - 1;
-    println!("{}", days_from_monday);
+    // get current week day
+    let week_day = current_time.date_naive().weekday();
+    // calculate time from last sunday
+    let temp = 7 - week_day.num_days_from_sunday();
+    // check whether it is sunday
+    let days_to_next_monday = if temp == 7 {
+        0
+    } else {
+        temp
+    };
+
+    // get DateTime instances for next monday and friday
+    let next_monday = current_time + Duration::days(days_to_next_monday as i64);
+    let next_friday = next_monday + Duration::days(5);
+
+    let next_monday_iso = next_monday.format("%Y%m%d").to_string();
+    let next_friday_iso = next_friday.format("%Y%m%d").to_string();
+
+    (next_monday_iso, next_friday_iso)
+}
+
+fn get_current_lessons_week_date() -> (String, String) {
+    // get current time
+    let current_time = Local::now();
+    // get the weekday 
+    let week_day = current_time.date_naive().weekday();
+    // calculate the numbers of day from monday
+    let days_from_monday = week_day.number_from_monday() - 1;
+    // get monday DateTime instance
     let monday_time = current_time - Duration::days(days_from_monday as i64);
+    // get friday DateTime instance
     let friday_time = monday_time + Duration::days(5);
 
     let monday_iso = monday_time.format("%Y%m%d").to_string();
     let friday_iso = friday_time.format("%Y%m%d").to_string();
 
-
-
     (monday_iso, friday_iso)
 }
 
-fn get_agenda_week_date() -> (String, String) {
+fn get_current_agenda_week_date() -> (String, String) {
     let mut current_time = Local::now();
 
     let temp = current_time.date_naive().weekday();
@@ -287,15 +313,17 @@ pub async fn grades_request() -> Grades {
     result
 }
 
-// The default behavior of the request is fetching the agenda of the current day
+// The default behavior of the request is fetching the agenda of the current week
 pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
-    // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
     let (start, end): (String, String) = if selected_date.is_none() {
-        get_agenda_week_date()
+        get_current_agenda_week_date()
     } else {
-        // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
         let date = selected_date.unwrap();
-        (date.clone(), date)
+        if date == "nextweek" {
+            get_next_week_date()
+        } else {
+            (date.clone(), date)
+        }
     };
 
     // make the url
@@ -341,7 +369,7 @@ pub async fn agenda_request(selected_date: Option<String>) -> Agendas {
 pub async fn lessons_request(selected_date: Option<String>) -> Lessons {
     // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
     let (start, end): (String, String) = if selected_date.is_none() {
-        get_lessons_week_date()
+        get_current_lessons_week_date()
     } else {
         // TODO: add shortcuts for displaying agenda of the next day, the previous day and so on
         let date = selected_date.unwrap();

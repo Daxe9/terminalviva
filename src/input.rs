@@ -73,11 +73,15 @@ impl AgendaSettings {
     fn new(settings: Settings, date: Option<String>) -> Self {
         let date = match date {
             Some(date) => {
-                // validate an iso 8601 string
-                match chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d") {
-                    Ok(date) => Some(date.to_string().replace("-", "")),
-                    Err(_) => {
-                        panic!("Invalid date format, please follow ISO 8601 standard format(YYYY-MM-DD)");
+                if date == "nextweek" {
+                    Some(date)
+                } else {
+                    // validate an iso 8601 string
+                    match chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d") {
+                        Ok(date) => Some(date.to_string().replace("-", "")),
+                        Err(_) => {
+                            panic!("Invalid date format, please follow ISO 8601 standard format(YYYY-MM-DD)");
+                        }
                     }
                 }
             }
