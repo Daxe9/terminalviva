@@ -25,12 +25,12 @@ impl DefaultStyle for Table {
 
 #[allow(non_snake_case)]
 #[derive(Tabled)]
-struct SimpleGrade {
+pub struct SimpleGrade {
     subject: String,
     date: String,
-    grade: f32,
+    pub grade: f64,
     subject_type: String,
-    weight: f32,
+    pub weight: f64,
 }
 
 impl SimpleGrade {
@@ -89,7 +89,7 @@ fn sort_date_grade(grades: Vec<SimpleGrade>, from_oldest_to_youngest: bool) -> V
     grades
 }
 
-pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
+pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> (String, Vec<SimpleGrade>) {
     let simplified_grades: Vec<SimpleGrade> = grades
         .grades
         .into_iter()
@@ -97,7 +97,7 @@ pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
         .collect();
 
     if simplified_grades.is_empty() {
-        return String::from("No records");
+        return (String::from("No records"), Vec::new());
     }
 
     // filter it by name if the name is specified
@@ -110,10 +110,10 @@ pub fn display_grades(grades: Grades, grade_settings: GradeSettings) -> String {
     };
 
     let simplified_grades = sort_date_grade(simplified_grades, grade_settings.settings.desc_date);
-    let mut table = Table::new(simplified_grades);
+    let mut table = Table::new(&simplified_grades);
     table.add_default_style();
 
-    table.to_string()
+    (table.to_string(), simplified_grades)
 }
 
 #[allow(non_snake_case)]
@@ -223,7 +223,6 @@ pub fn display_agenda(agenda: Agendas) -> String {
     table.to_string()
 }
 
-
 #[allow(non_snake_case)]
 #[derive(Tabled)]
 struct SimpleLesson {
@@ -232,27 +231,27 @@ struct SimpleLesson {
     date: String,
     desc: String,
     code: String,
-    teacher: String
+    teacher: String,
 }
 
 impl SimpleLesson {
     fn from_lesson(lesson: Lesson) -> Self {
         // create a NaiveDate instance from a string with format %Y-%m-%d
-        let naive_date = NaiveDate::parse_from_str(&lesson.evtDate, "%Y-%m-%d").expect("Invalid date format");
+        let naive_date =
+            NaiveDate::parse_from_str(&lesson.evtDate, "%Y-%m-%d").expect("Invalid date format");
         // create NaiveDateTime instance from NaiveDate
         let naive_time = naive_date.and_hms_opt(0, 0, 0).unwrap();
 
         // create offset for DateTime<FixedOffset>
         let fixed_offset = FixedOffset::east_opt(0).unwrap();
 
-        let processed_time =
-            DateTime::<FixedOffset>::from_utc(naive_time, fixed_offset);
+        let processed_time = DateTime::<FixedOffset>::from_utc(naive_time, fixed_offset);
         SimpleLesson {
             time: processed_time,
             desc: lesson.lessonArg,
             teacher: lesson.authorName,
             code: lesson.evtCode,
-            date: String::from("")
+            date: String::from(""),
         }
     }
 }

@@ -11,7 +11,7 @@ pub enum ResponseResult {
     Grades(Grades),
     Absences(Absences),
     Agendas(Agendas),
-    Lessons(Lessons)
+    Lessons(Lessons),
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExpiredToken {
@@ -37,7 +37,7 @@ pub struct Grade {
     pub subjectDesc: String,
     pub evtId: u32,
     pub evtDate: String,
-    pub decimalValue: f32,
+    pub decimalValue: f64,
     pub displayValue: String,
     // The misspelling of this field is not an error. All the decision is made by the server
     pub displaPos: u32,
@@ -50,7 +50,7 @@ pub struct Grade {
     pub componentPos: u32,
     pub componentDesc: String,
 
-    pub weightFactor: f32,
+    pub weightFactor: f64,
 
     pub skillId: u32,
     pub gradeMasterId: u32,
@@ -146,7 +146,6 @@ pub struct LoginError {
     pub message: String,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Lessons {
     pub lessons: Vec<Lesson>,
@@ -154,7 +153,9 @@ pub struct Lessons {
 
 impl Lessons {
     pub fn new() -> Self {
-        Lessons { lessons: Vec::new() }
+        Lessons {
+            lessons: Vec::new(),
+        }
     }
 }
 
@@ -171,7 +172,5 @@ pub struct Lesson {
     pub subjectCode: Option<Value>,
     pub subjectDesc: Option<String>,
     pub lessonType: Option<String>,
-    pub lessonArg: String
-
-
+    pub lessonArg: String,
 }

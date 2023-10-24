@@ -1,7 +1,7 @@
 // Module: api
 use crate::response_types::*;
 use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
-use chrono::{offset::Local, Datelike, Duration, Weekday, DateTime};
+use chrono::{offset::Local, Datelike, Duration, Weekday};
 use std::io::Write;
 use std::path::Path;
 
@@ -68,11 +68,7 @@ fn get_next_week_date() -> (String, String) {
     // calculate time from last sunday
     let temp = 7 - week_day.num_days_from_sunday();
     // check whether it is sunday
-    let days_to_next_monday = if temp == 7 {
-        0
-    } else {
-        temp
-    };
+    let days_to_next_monday = if temp == 7 { 0 } else { temp };
 
     // get DateTime instances for next monday and friday
     let next_monday = current_time + Duration::days(days_to_next_monday as i64);
@@ -87,7 +83,7 @@ fn get_next_week_date() -> (String, String) {
 fn get_current_lessons_week_date() -> (String, String) {
     // get current time
     let current_time = Local::now();
-    // get the weekday 
+    // get the weekday
     let week_day = current_time.date_naive().weekday();
     // calculate the numbers of day from monday
     let days_from_monday = week_day.number_from_monday() - 1;

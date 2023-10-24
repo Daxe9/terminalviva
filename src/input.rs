@@ -108,8 +108,23 @@ pub async fn process_input() {
         Commands::Grade => {
             let grade_settings = GradeSettings::new(settings, args.name);
             let result = api::grades_request().await;
-            let result = display::display_grades(result, grade_settings);
+            let (result, grades) = display::display_grades(result, grade_settings);
+
+            // average
+            let average = grades.iter().fold(0.0, |a, b| a + b.grade) / (grades.len() as f64);
+
+            // weighted average
+            let mut sum: f64 = 0.0;
+            let mut weights: f64 = 0.0;
+            for grade in grades {
+                sum += grade.grade * grade.weight;
+                weights += grade.weight;
+            }
+            let weighted_average = sum / weights;
+
             println!("{}", result);
+            println!("The average grade is {:.2}.", average);
+            println!("The weighted average grade is {:.2}.", weighted_average);
         }
         Commands::Agenda => {
             let agenda_settings = AgendaSettings::new(settings, args.date);
@@ -122,7 +137,6 @@ pub async fn process_input() {
             let result = api::lessons_request(lesson_settings.date).await;
             let result = display::display_lessons(result);
             println!("{}", result);
-
         }
         Commands::Test => {
             println!("Test");
