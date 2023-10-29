@@ -14,9 +14,18 @@ struct DefaultHeaders {
 pub struct ConfigSettings {
     #[serde(alias = "wrap-width")]
     pub wrap_width: usize,
+    #[serde(alias = "credentials-file-path")]
+    pub credentials_file_path: String,
 }
 
-pub fn get_config() -> Option<Config> {
+pub struct UserConfig {
+    pub raw_body: Config,
+    pub default_headers: HeaderMap,
+    pub user_settings: ConfigSettings,
+
+}
+
+fn get_raw_config() -> Config {
     // get config instance from config.toml
     let config = match Config::builder()
         .add_source(File::with_name("config.toml"))
@@ -25,11 +34,11 @@ pub fn get_config() -> Option<Config> {
         Ok(v) => v,
         Err(e) => panic!("error parsing config.toml: {}", e),
     };
-    Some(config)
+    config
 }
 
-pub fn get_config_settings() -> ConfigSettings {
-    let config_settings: ConfigSettings = match crate::CONFIG.as_ref().unwrap().get("settings") {
+fn get_user_settings(config: &Config) -> ConfigSettings {
+    let config_settings: ConfigSettings = match config.get("settings") {
         Ok(v) => v,
         Err(e) => panic!("error at parsing config settings: {}", e),
     };
@@ -37,13 +46,13 @@ pub fn get_config_settings() -> ConfigSettings {
     config_settings
 }
 
-pub fn get_default_headers() -> HeaderMap {
+fn get_default_headers(config: &Config) -> HeaderMap {
     // get default headers
     let mut headers = HeaderMap::new();
 
     // get headers from config.toml
     let raw_default_headers: Vec<DefaultHeaders> =
-        match crate::CONFIG.as_ref().unwrap().get("headers") {
+        match config.get("headers") {
             Ok(v) => v,
             Err(e) => panic!("error at parsing default_headers: {}", e),
         };
@@ -63,6 +72,19 @@ pub fn get_default_headers() -> HeaderMap {
     headers
 }
 
+pub fn get_config() -> UserConfig {
+    let config = get_raw_config();
+    let default_headers = get_default_headers(&config); 
+    let user_settings = get_user_settings(&config);
+
+    UserConfig {
+        raw_body: config,
+        default_headers,
+        user_settings
+    }
+}
+
+// get token from .credentials.json file
 pub fn get_token() -> Mutex<Option<TokenCredential>> {
     let file = match std::fs::File::open(".credentials.json") {
         Ok(v) => v,

@@ -1,4 +1,4 @@
-// disable snake case warning for this file
+// disable snake case warning for this file since these types are parsed from an external server
 #![allow(non_snake_case)]
 
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,6 @@
 // Module: api
 use crate::response_types::*;
-use crate::{CONFIG, DEFAULT_HEADERS, TOKEN};
+use crate::{USER_CONFIG, TOKEN};
 use chrono::{offset::Local, Datelike, Duration, Weekday};
 use std::io::Write;
 use std::path::Path;
@@ -146,7 +146,7 @@ async fn get_request(url: &str) -> String {
     let client = reqwest::Client::new();
     let raw_result = match client
         .get(&url)
-        .headers(DEFAULT_HEADERS.to_owned())
+        .headers(USER_CONFIG.default_headers.to_owned())
         .header("z-auth-token", token_credential.token.as_str())
         .send()
         .await
@@ -178,7 +178,7 @@ async fn foreplay() -> Option<TokenCredential> {
 
 pub async fn login() -> TokenCredential {
     // get credentials
-    let credentials: Credentials = match CONFIG.as_ref().unwrap().get("credentials") {
+    let credentials: Credentials = match USER_CONFIG.raw_body.get("credentials") {
         Ok(v) => v,
         Err(e) => panic!("error parsing credentials: {}", e),
     };
@@ -188,7 +188,7 @@ pub async fn login() -> TokenCredential {
     let client = reqwest::Client::new();
     let raw_result = match client
         .post(format!("{}/auth/login", BASE_URL))
-        .headers(DEFAULT_HEADERS.to_owned())
+        .headers(USER_CONFIG.default_headers.to_owned())
         .json(&login_data)
         .send()
         .await

@@ -1,6 +1,6 @@
 use crate::input::GradeSettings;
 use crate::response_types::*;
-use crate::CONFIG_SETTINGS;
+use crate::USER_CONFIG;
 use chrono::{DateTime, FixedOffset, NaiveDate};
 use tabled::{
     settings::{object::Rows, Alignment, Modify, Style, Width},
@@ -18,7 +18,7 @@ impl DefaultStyle for Table {
             .with(Modify::new(Rows::first()).with(Alignment::center()))
             .with(
                 Modify::new(Rows::new(1..))
-                    .with(Width::wrap(CONFIG_SETTINGS.wrap_width).keep_words()),
+                    .with(Width::wrap(USER_CONFIG.user_settings.wrap_width).keep_words()),
             );
     }
 }
