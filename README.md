@@ -1,2 +1,5 @@
 # Instruction for credentials storing
-Rename `config.example.toml` to `config.toml` and fill it up with your credentials.
+- Copy `config.example.toml` to the default configuration path at `$HOME/.config/terminalviva`
+- Rename `config.example.toml` to `config.toml`
+- Fill it up with your credentials
+
