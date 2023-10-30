@@ -1,6 +1,6 @@
 // Module: api
 use crate::response_types::*;
-use crate::{USER_CONFIG, TOKEN};
+use crate::{TOKEN, USER_CONFIG};
 use chrono::{offset::Local, Datelike, Duration, Weekday};
 use std::io::Write;
 use std::path::Path;
@@ -45,7 +45,8 @@ if it exists, remove it in order to create a new one with updated token
 Otherwise, create a new one with the token
 */
 fn update_token(token_credential: &TokenCredential) {
-    let file_path = Path::new(".credentials.json");
+    // convert a PathBuf to Path
+    let file_path = Path::new(&USER_CONFIG.paths.0);
     let existing_token_file = file_path.exists();
 
     if existing_token_file {

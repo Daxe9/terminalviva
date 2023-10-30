@@ -1,6 +1,5 @@
 [settings]
 wrap-width = 30
-credentials-file-path = "~/.config/terminalviva/.credentials.json"
 
 [credentials]
 username = ""

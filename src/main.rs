@@ -3,8 +3,8 @@ mod display;
 mod input;
 mod response_types;
 mod settings;
-use settings::*;
 use lazy_static::lazy_static;
+use settings::*;
 use std::sync::Mutex;
 
 lazy_static! {
