@@ -3,7 +3,7 @@ use config::{Config, File};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 use std::env::{consts, var};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Mutex;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigSettings {
@@ -25,10 +25,11 @@ struct DefaultHeaders {
     pub value: String,
 }
 
-fn allowed_linux() {
+fn allow_list() {
     match consts::OS {
         "linux" => (),
-        _ => panic!("Only working on linux right now..."),
+        "android" => (),
+        _ => panic!("Only working on linux and derivatives right now..."),
     };
 }
 
@@ -55,7 +56,7 @@ fn get_config_path() -> (PathBuf, PathBuf) {
 }
 
 fn get_raw_config() -> Config {
-    allowed_linux();
+    allow_list();
     let paths = get_config_path();
     // get config instance from config.toml
     let config = match Config::builder()
