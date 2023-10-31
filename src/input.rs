@@ -41,7 +41,6 @@ enum Commands {
         about = "Display agenda of the current user, default is the current day"
     )]
     Agenda,
-    Test,
 }
 
 pub struct Settings {
@@ -137,9 +136,6 @@ pub async fn process_input() {
             let result = api::lessons_request(lesson_settings.date).await;
             let result = display::display_lessons(result);
             println!("{}", result);
-        }
-        Commands::Test => {
-            println!("Test");
         }
     }
 }
